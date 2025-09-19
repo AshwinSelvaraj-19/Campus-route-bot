@@ -51,6 +51,8 @@ let isListening = false;
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Initializing Campus Navigation App...');
+    console.log('Locations available:', locations.length);
+    console.log('Path connections:', pathConnections.length);
     initializeApp();
 });
 
@@ -58,6 +60,7 @@ function initializeApp() {
     populateLocationSelectors();
     setupEventListeners();
     setupSpeechRecognition();
+    console.log('App initialized successfully');
 }
 
 function populateLocationSelectors() {
@@ -170,6 +173,12 @@ function handleRouteSubmission(e) {
     setTimeout(() => {
         const result = findRoute(startId, endId);
         console.log('Route result:', result);
+        if (result.success) {
+            console.log('Route found with', result.route.length, 'steps');
+            console.log('Total distance:', result.totalDistance, 'meters');
+        } else {
+            console.log('No route found');
+        }
         displayRouteResult(result);
         setLoadingState(false);
     }, 800);
@@ -192,7 +201,9 @@ function handleChatSubmission(e) {
 }
 
 function processChatMessage(message) {
+    console.log('Processing chat message:', message);
     const { start, end } = parseNavigationRequest(message);
+    console.log('Parsed locations - Start:', start, 'End:', end);
     
     if (start && end) {
         if (start.id === end.id) {
@@ -204,11 +215,18 @@ function processChatMessage(message) {
         
         setTimeout(() => {
             const result = findRoute(start.id, end.id);
+            console.log('Chat route result:', result);
             if (result.success) {
                 displayRouteResult(result);
                 // Auto-populate the form
-                document.getElementById('start-location').value = start.id;
-                document.getElementById('end-location').value = end.id;
+                const startSelect = document.getElementById('start-location');
+                const endSelect = document.getElementById('end-location');
+                if (startSelect) startSelect.value = start.id;
+                if (endSelect) endSelect.value = end.id;
+                
+                addChatMessage(`Route found! Distance: ${result.totalDistance}m, Time: ${result.estimatedTime} minutes. You can click "Show on Map" to see the visual route.`, false);
+            } else {
+                addChatMessage('Sorry, I could not find a route between those locations. Please try different locations.', false);
             }
         }, 500);
     } else {
@@ -357,24 +375,38 @@ function setLoadingState(loading) {
 
 function displayRouteResult(result) {
     const resultDiv = document.getElementById('route-result');
+    console.log('Displaying route result:', result);
     
     if (result.success) {
         currentRoute = result;
         
-        document.getElementById('total-distance').textContent = `${(result.totalDistance / 1000).toFixed(2)} km`;
-        document.getElementById('estimated-time').textContent = `${result.estimatedTime} minutes`;
+        const totalDistanceEl = document.getElementById('total-distance');
+        const estimatedTimeEl = document.getElementById('estimated-time');
+        const routePathEl = document.getElementById('route-path');
         
-        const routePath = result.route.map(step => step.location.name).join(' → ');
-        document.getElementById('route-path').textContent = routePath;
+        if (totalDistanceEl) {
+            totalDistanceEl.textContent = `${result.totalDistance}m`;
+        }
+        if (estimatedTimeEl) {
+            estimatedTimeEl.textContent = `${result.estimatedTime} minutes`;
+        }
+        
+        if (routePathEl) {
+            const routePath = result.route.map(step => step.location.name).join(' → ');
+            routePathEl.textContent = routePath;
+        }
         
         resultDiv.style.display = 'block';
+        console.log('Route result displayed successfully');
     } else {
         resultDiv.style.display = 'none';
         showError('No route found between selected locations');
+        console.log('Route result hidden due to failure');
     }
 }
 
 function showMap() {
+    console.log('Show map clicked, currentRoute:', currentRoute);
     if (!currentRoute) return;
     
     document.getElementById('main-interface').style.display = 'none';
@@ -391,9 +423,11 @@ function hideMap() {
 }
 
 function initializeMap() {
+    console.log('Initializing map with route:', currentRoute);
     if (!currentRoute) return;
     
     const mapContainer = document.getElementById('map');
+    console.log('Map container found:', !!mapContainer);
     
     // Clear existing map
     if (map) {
@@ -401,24 +435,30 @@ function initializeMap() {
     }
     
     // Create new map
-    map = L.map(mapContainer).setView(currentRoute.route[0].location.coordinates, 16);
+    const startCoords = currentRoute.route[0].location.coordinates;
+    console.log('Setting map view to:', startCoords);
+    map = L.map(mapContainer).setView(startCoords, 16);
     
     // Add tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
+    console.log('Tile layer added');
     
     // Add route polyline
     const routeCoordinates = currentRoute.route.map(step => step.location.coordinates);
+    console.log('Route coordinates:', routeCoordinates);
     routeLayer = L.polyline(routeCoordinates, {
         color: '#3B82F6',
         weight: 4,
         opacity: 0.8,
         dashArray: '10, 5'
     }).addTo(map);
+    console.log('Route polyline added');
     
     // Add markers
     markersLayer = L.layerGroup().addTo(map);
+    console.log('Adding', currentRoute.route.length, 'markers');
     
     currentRoute.route.forEach((step, index) => {
         const isStart = index === 0;
@@ -464,51 +504,69 @@ function initializeMap() {
     });
     
     // Fit map to route bounds
-    map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
+    if (routeLayer) {
+        map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
+        console.log('Map bounds fitted to route');
+    }
     
     // Update route info panel
     updateMapRouteInfo();
+    console.log('Map initialization complete');
 }
 
 function updateMapRouteInfo() {
+    console.log('Updating map route info');
     if (!currentRoute) return;
     
-    document.getElementById('map-total-distance').textContent = `${(currentRoute.totalDistance / 1000).toFixed(2)} km`;
-    document.getElementById('map-estimated-time').textContent = `${currentRoute.estimatedTime} minutes`;
+    const mapTotalDistanceEl = document.getElementById('map-total-distance');
+    const mapEstimatedTimeEl = document.getElementById('map-estimated-time');
+    
+    if (mapTotalDistanceEl) {
+        mapTotalDistanceEl.textContent = `${currentRoute.totalDistance}m`;
+    }
+    if (mapEstimatedTimeEl) {
+        mapEstimatedTimeEl.textContent = `${currentRoute.estimatedTime} minutes`;
+    }
     
     const stepsContainer = document.getElementById('map-route-steps');
-    stepsContainer.innerHTML = '';
+    if (stepsContainer) {
+        stepsContainer.innerHTML = '';
     
-    currentRoute.route.forEach((step, index) => {
-        const isStart = index === 0;
-        const isEnd = index === currentRoute.route.length - 1;
-        
-        const stepDiv = document.createElement('div');
-        stepDiv.className = 'step-item';
-        
-        const dot = document.createElement('div');
-        dot.className = `step-dot ${isStart ? 'start' : isEnd ? 'end' : 'waypoint'}`;
-        
-        const name = document.createElement('span');
-        name.className = 'step-name';
-        name.textContent = step.location.name;
-        
-        stepDiv.appendChild(dot);
-        stepDiv.appendChild(name);
-        
-        if (step.distanceFromPrevious) {
-            const distance = document.createElement('span');
-            distance.className = 'step-distance';
-            distance.textContent = `${step.distanceFromPrevious}m`;
-            stepDiv.appendChild(distance);
-        }
-        
-        stepsContainer.appendChild(stepDiv);
-    });
+        currentRoute.route.forEach((step, index) => {
+            const isStart = index === 0;
+            const isEnd = index === currentRoute.route.length - 1;
+            
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'step-item';
+            
+            const dot = document.createElement('div');
+            dot.className = `step-dot ${isStart ? 'start' : isEnd ? 'end' : 'waypoint'}`;
+            
+            const name = document.createElement('span');
+            name.className = 'step-name';
+            name.textContent = step.location.name;
+            
+            stepDiv.appendChild(dot);
+            stepDiv.appendChild(name);
+            
+            if (step.distanceFromPrevious) {
+                const distance = document.createElement('span');
+                distance.className = 'step-distance';
+                distance.textContent = `${step.distanceFromPrevious}m`;
+                stepDiv.appendChild(distance);
+            }
+            
+            stepsContainer.appendChild(stepDiv);
+        });
+    }
+    console.log('Map route info updated');
 }
 
 // Pathfinding Algorithm (Dijkstra's)
 function findRoute(startId, endId) {
+    console.log('Finding route from', startId, 'to', endId);
+    console.log('Available connections:', allConnections.length);
+    
     if (startId === endId) {
         return {
             route: [],
@@ -530,6 +588,8 @@ function findRoute(startId, endId) {
         });
         unvisited.add(location.id);
     });
+    
+    console.log('Initialized', nodes.size, 'nodes');
 
     while (unvisited.size > 0) {
         // Find unvisited node with minimum distance
@@ -554,6 +614,7 @@ function findRoute(startId, endId) {
 
         // Update distances to neighbors
         const connections = allConnections.filter(conn => conn.from === currentId);
+        console.log('Found', connections.length, 'connections from', currentId);
         
         for (const connection of connections) {
             const neighborNode = nodes.get(connection.to);
@@ -572,6 +633,7 @@ function findRoute(startId, endId) {
     let currentNode = nodes.get(endId);
     
     if (!currentNode || currentNode.distance === Infinity) {
+        console.log('No route found - destination unreachable');
         return {
             route: [],
             totalDistance: 0,
@@ -586,6 +648,8 @@ function findRoute(startId, endId) {
         pathNodes.unshift(currentNode);
         currentNode = currentNode.previous;
     }
+    
+    console.log('Route path has', pathNodes.length, 'nodes');
 
     // Convert to route steps
     let totalDistance = 0;
@@ -608,6 +672,12 @@ function findRoute(startId, endId) {
 
     // Estimate walking time (assuming 5 km/h walking speed)
     const estimatedTime = Math.ceil((totalDistance / 1000) * 12); // minutes
+    
+    console.log('Route found:', {
+        steps: route.length,
+        totalDistance,
+        estimatedTime
+    });
 
     return {
         route,
