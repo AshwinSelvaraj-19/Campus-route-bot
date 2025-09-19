@@ -49,11 +49,29 @@ let recognition = null;
 let isListening = false;
 
 // Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
+function initializeAppSafely() {
     console.log('Initializing Campus Navigation App...');
     console.log('Locations available:', locations.length);
     console.log('Path connections:', pathConnections.length);
     initializeApp();
+}
+
+// Multiple initialization strategies for better compatibility
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAppSafely);
+} else {
+    // DOM is already loaded
+    initializeAppSafely();
+}
+
+// Fallback initialization
+window.addEventListener('load', function() {
+    // Double-check initialization after full page load
+    const startSelect = document.getElementById('start-location');
+    if (startSelect && startSelect.children.length <= 1) {
+        console.log('Fallback initialization triggered');
+        initializeApp();
+    }
 });
 
 function initializeApp() {
@@ -67,13 +85,28 @@ function populateLocationSelectors() {
     const startSelect = document.getElementById('start-location');
     const endSelect = document.getElementById('end-location');
     
+    if (!startSelect || !endSelect) {
+        console.error('Location selectors not found in DOM');
+        return;
+    }
+    
     console.log('Populating location selectors...');
     
     // Clear existing options except the first one
     startSelect.innerHTML = '<option value="">Select start location</option>';
     endSelect.innerHTML = '<option value="">Select end location</option>';
     
+    if (!locations || locations.length === 0) {
+        console.error('No locations data available');
+        return;
+    }
+    
     locations.forEach(location => {
+        if (!location || !location.id || !location.name) {
+            console.warn('Invalid location data:', location);
+            return;
+        }
+        
         const option1 = document.createElement('option');
         option1.value = location.id;
         option1.textContent = location.name;
@@ -86,23 +119,61 @@ function populateLocationSelectors() {
     });
     
     console.log('Location selectors populated with', locations.length, 'locations');
+    
+    // Verify population worked
+    console.log('Start select options:', startSelect.children.length);
+    console.log('End select options:', endSelect.children.length);
 }
 
 function setupEventListeners() {
+    console.log('Setting up event listeners...');
+    
     // Route form submission
-    document.getElementById('route-form').addEventListener('submit', handleRouteSubmission);
+    const routeForm = document.getElementById('route-form');
+    if (routeForm) {
+        routeForm.addEventListener('submit', handleRouteSubmission);
+        console.log('Route form listener added');
+    } else {
+        console.error('Route form not found');
+    }
     
     // Chat form submission
-    document.getElementById('chat-form').addEventListener('submit', handleChatSubmission);
+    const chatForm = document.getElementById('chat-form');
+    if (chatForm) {
+        chatForm.addEventListener('submit', handleChatSubmission);
+        console.log('Chat form listener added');
+    } else {
+        console.error('Chat form not found');
+    }
     
     // Voice button
-    document.getElementById('voice-btn').addEventListener('click', toggleVoiceRecognition);
+    const voiceBtn = document.getElementById('voice-btn');
+    if (voiceBtn) {
+        voiceBtn.addEventListener('click', toggleVoiceRecognition);
+        console.log('Voice button listener added');
+    } else {
+        console.error('Voice button not found');
+    }
     
     // Show map button
-    document.getElementById('show-map-btn').addEventListener('click', showMap);
+    const showMapBtn = document.getElementById('show-map-btn');
+    if (showMapBtn) {
+        showMapBtn.addEventListener('click', showMap);
+        console.log('Show map button listener added');
+    } else {
+        console.error('Show map button not found');
+    }
     
     // Back button
-    document.getElementById('back-btn').addEventListener('click', hideMap);
+    const backBtn = document.getElementById('back-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', hideMap);
+        console.log('Back button listener added');
+    } else {
+        console.error('Back button not found');
+    }
+    
+    console.log('Event listeners setup complete');
 }
 
 function setupSpeechRecognition() {
