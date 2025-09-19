@@ -142,23 +142,6 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
             crossorigin=""></script>
-    <script>
-        // Debug information
-        console.log('HTML loaded, DOM state:', document.readyState);
-        console.log('Script loading...');
-    </script>
     <script src="script.js" defer></script>
-    <script>
-        // Additional fallback check
-        setTimeout(function() {
-            const startSelect = document.getElementById('start-location');
-            if (startSelect && startSelect.children.length <= 1) {
-                console.log('Emergency initialization - selectors empty after 2 seconds');
-                if (typeof initializeApp === 'function') {
-                    initializeApp();
-                }
-            }
-        }, 2000);
-    </script>
 </body>
 </html>

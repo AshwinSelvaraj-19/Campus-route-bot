@@ -12,6 +12,9 @@ const locations = [
     { id: 'sports_area', name: 'Sports Area', coordinates: [13.228393, 77.757574] }
 ];
 
+// Ensure locations are available globally
+window.campusLocations = locations;
+
 const pathConnections = [
     { from: 'gate1', to: 'gate2', distance: 180 },
     { from: 'gate2', to: 'admin1', distance: 75 },
@@ -48,31 +51,72 @@ let markersLayer = null;
 let recognition = null;
 let isListening = false;
 
-// Initialize the application
+// Initialize the application with multiple fallback strategies
 function initializeAppSafely() {
-    console.log('Initializing Campus Navigation App...');
-    console.log('Locations available:', locations.length);
-    console.log('Path connections:', pathConnections.length);
-    initializeApp();
-}
-
-// Multiple initialization strategies for better compatibility
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeAppSafely);
-} else {
-    // DOM is already loaded
-    initializeAppSafely();
-}
-
-// Fallback initialization
-window.addEventListener('load', function() {
-    // Double-check initialization after full page load
+    console.log('=== Campus Navigation App Initialization ===');
+    console.log('Document ready state:', document.readyState);
+    console.log('Locations available:', locations ? locations.length : 'undefined');
+    console.log('Path connections:', pathConnections ? pathConnections.length : 'undefined');
+    
+    // Check if DOM elements exist
     const startSelect = document.getElementById('start-location');
-    if (startSelect && startSelect.children.length <= 1) {
-        console.log('Fallback initialization triggered');
+    const endSelect = document.getElementById('end-location');
+    
+    console.log('Start select element found:', !!startSelect);
+    console.log('End select element found:', !!endSelect);
+    
+    if (startSelect && endSelect) {
         initializeApp();
+    } else {
+        console.error('Required DOM elements not found, retrying in 500ms...');
+        setTimeout(initializeAppSafely, 500);
     }
-});
+}
+
+// Multiple initialization strategies
+function setupInitialization() {
+    console.log('Setting up initialization strategies...');
+    
+    // Strategy 1: DOMContentLoaded
+    if (document.readyState === 'loading') {
+        console.log('DOM still loading, waiting for DOMContentLoaded...');
+        document.addEventListener('DOMContentLoaded', initializeAppSafely);
+    } else {
+        console.log('DOM already loaded, initializing immediately...');
+        initializeAppSafely();
+    }
+    
+    // Strategy 2: Window load event (fallback)
+    window.addEventListener('load', function() {
+        console.log('Window load event fired, checking initialization...');
+        const startSelect = document.getElementById('start-location');
+        if (startSelect && startSelect.children.length <= 1) {
+            console.log('Fallback initialization triggered from window load');
+            initializeAppSafely();
+        }
+    });
+    
+    // Strategy 3: Emergency fallback after 3 seconds
+    setTimeout(function() {
+        console.log('Emergency fallback check after 3 seconds...');
+        const startSelect = document.getElementById('start-location');
+        const endSelect = document.getElementById('end-location');
+        
+        if (startSelect && endSelect && startSelect.children.length <= 1) {
+            console.log('Emergency initialization triggered');
+            initializeAppSafely();
+        } else if (!startSelect || !endSelect) {
+            console.error('CRITICAL: DOM elements still not found after 3 seconds');
+            console.error('Start select:', !!startSelect);
+            console.error('End select:', !!endSelect);
+        } else {
+            console.log('App appears to be properly initialized');
+        }
+    }, 3000);
+}
+
+// Start initialization
+setupInitialization();
 
 function initializeApp() {
     populateLocationSelectors();
@@ -82,15 +126,19 @@ function initializeApp() {
 }
 
 function populateLocationSelectors() {
+    console.log('=== Populating Location Selectors ===');
+    
     const startSelect = document.getElementById('start-location');
     const endSelect = document.getElementById('end-location');
     
     if (!startSelect || !endSelect) {
         console.error('Location selectors not found in DOM');
+        console.error('Start select:', !!startSelect);
+        console.error('End select:', !!endSelect);
         return;
     }
     
-    console.log('Populating location selectors...');
+    console.log('Found both select elements, proceeding with population...');
     
     // Clear existing options except the first one
     startSelect.innerHTML = '<option value="">Select start location</option>';
@@ -98,14 +146,19 @@ function populateLocationSelectors() {
     
     if (!locations || locations.length === 0) {
         console.error('No locations data available');
+        console.error('Locations variable:', locations);
         return;
     }
+    
+    console.log('Processing', locations.length, 'locations...');
     
     locations.forEach(location => {
         if (!location || !location.id || !location.name) {
             console.warn('Invalid location data:', location);
             return;
         }
+        
+        console.log('Adding location:', location.name);
         
         const option1 = document.createElement('option');
         option1.value = location.id;
@@ -119,10 +172,14 @@ function populateLocationSelectors() {
     });
     
     console.log('Location selectors populated with', locations.length, 'locations');
-    
-    // Verify population worked
     console.log('Start select options:', startSelect.children.length);
     console.log('End select options:', endSelect.children.length);
+    
+    // Make selectors visible if they were hidden
+    startSelect.style.display = 'block';
+    endSelect.style.display = 'block';
+    
+    console.log('=== Location Selector Population Complete ===');
 }
 
 function setupEventListeners() {

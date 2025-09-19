@@ -161,6 +161,9 @@ body {
     font-size: 0.875rem;
     font-weight: 500;
     transition: all 0.2s ease;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .form-group select:focus {
