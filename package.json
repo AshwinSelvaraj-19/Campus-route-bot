@@ -1,0 +1,15 @@
+{
+  "name": "campus-route-bot",
+  "version": "1.0.0",
+  "description": "Smart Campus Navigation System",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 3000",
+    "dev": "python3 -m http.server 3000"
+  },
+  "keywords": ["campus", "navigation", "routing", "maps"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}
