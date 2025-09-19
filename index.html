@@ -1,13 +1,143 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BotGuide - Campus Navigation</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    <div id="app">
+        <!-- Main Navigation Interface -->
+        <div id="main-interface" class="main-container">
+            <!-- Background Pattern -->
+            <div class="background-pattern"></div>
+            
+            <div class="content-wrapper">
+                <!-- Header Section -->
+                <div class="header-section">
+                    <div class="brand-container">
+                        <div class="logo">🧭</div>
+                        <h1>BotGuide</h1>
+                    </div>
+                    <h2>Smart Campus Navigation</h2>
+                    <p>Find the most efficient routes between campus locations with our intelligent pathfinding system.</p>
+                </div>
+
+                <!-- Navigation Form -->
+                <div class="navigation-form">
+                    <div class="form-header">
+                        <div class="form-icon">🗺️</div>
+                        <h3>Campus Navigation</h3>
+                        <p>Find the best route between campus locations</p>
+                    </div>
+
+                    <form id="route-form">
+                        <div class="form-group">
+                            <label for="start-location">📍 Start Location</label>
+                            <select id="start-location" required>
+                                <option value="">Select start location</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="end-location">📍 End Location</label>
+                            <select id="end-location" required>
+                                <option value="">Select end location</option>
+                            </select>
+                        </div>
+
+                        <div id="error-message" class="error-message" style="display: none;"></div>
+
+                        <button type="submit" id="find-route-btn">
+                            <span id="btn-text">Find Route</span>
+                            <div id="loading-spinner" class="loading-spinner" style="display: none;"></div>
+                        </button>
+                    </form>
+
+                    <!-- Route Result -->
+                    <div id="route-result" class="route-result" style="display: none;">
+                        <h4>🗺️ Route Found</h4>
+                        <div class="result-details">
+                            <div class="detail-row">
+                                <span>Total Distance:</span>
+                                <span id="total-distance"></span>
+                            </div>
+                            <div class="detail-row">
+                                <span>⏱️ Estimated Time:</span>
+                                <span id="estimated-time"></span>
+                            </div>
+                            <div class="route-steps">
+                                <span>Route:</span>
+                                <div id="route-path"></div>
+                            </div>
+                        </div>
+                        <button id="show-map-btn" class="show-map-btn">Show on Map</button>
+                    </div>
+                </div>
+
+                <!-- Chat Interface -->
+                <div class="chat-interface">
+                    <div class="chat-header">
+                        <div class="chat-icon">💬</div>
+                        <h3>Chat Navigation</h3>
+                        <p>Type or speak your navigation request</p>
+                    </div>
+
+                    <div id="chat-messages" class="chat-messages">
+                        <div class="message bot-message">
+                            Hi! I can help you navigate the campus. Try saying something like 'Take me from Main Gate 1 to Food Court' or 'Navigate from Admin Block 1 to Hostel 1'
+                        </div>
+                    </div>
+
+                    <form id="chat-form" class="chat-input-form">
+                        <div class="input-container">
+                            <input type="text" id="chat-input" placeholder="Type your navigation request..." />
+                            <button type="button" id="voice-btn" class="voice-btn" title="Voice Input">🎤</button>
+                        </div>
+                        <button type="submit" class="send-btn">➤</button>
+                    </form>
+
+                    <div id="listening-indicator" class="listening-indicator" style="display: none;">
+                        <div class="pulse-dot"></div>
+                        Listening...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Interface -->
+        <div id="map-interface" class="map-interface" style="display: none;">
+            <div class="map-header">
+                <button id="back-btn" class="back-btn">← Back</button>
+                <h1>Campus Navigation</h1>
+                <div class="spacer"></div>
+            </div>
+            
+            <div id="map" class="map-container"></div>
+            
+            <div class="route-info-panel">
+                <h3>Route Information</h3>
+                <div class="info-details">
+                    <div class="info-row">
+                        <span>Total Distance:</span>
+                        <span id="map-total-distance"></span>
+                    </div>
+                    <div class="info-row">
+                        <span>Estimated Time:</span>
+                        <span id="map-estimated-time"></span>
+                    </div>
+                    <div class="route-steps-container">
+                        <span>Route Steps:</span>
+                        <div id="map-route-steps"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+</body>
 </html>
