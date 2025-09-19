@@ -4,7 +4,8 @@
   "description": "Smart Campus Navigation System",
   "main": "index.html",
   "scripts": {
-    "dev": "node server.js"
+    "dev": "python3 -m http.server 3000",
+    "build": "echo 'Static site - no build needed'"
   },
   "keywords": ["campus", "navigation", "routing", "maps"],
   "author": "",

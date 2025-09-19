@@ -50,6 +50,7 @@ let isListening = false;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing Campus Navigation App...');
     initializeApp();
 });
 
@@ -63,6 +64,12 @@ function populateLocationSelectors() {
     const startSelect = document.getElementById('start-location');
     const endSelect = document.getElementById('end-location');
     
+    console.log('Populating location selectors...');
+    
+    // Clear existing options except the first one
+    startSelect.innerHTML = '<option value="">Select start location</option>';
+    endSelect.innerHTML = '<option value="">Select end location</option>';
+    
     locations.forEach(location => {
         const option1 = document.createElement('option');
         option1.value = location.id;
@@ -74,6 +81,8 @@ function populateLocationSelectors() {
         option2.textContent = location.name;
         endSelect.appendChild(option2);
     });
+    
+    console.log('Location selectors populated with', locations.length, 'locations');
 }
 
 function setupEventListeners() {
@@ -94,6 +103,8 @@ function setupEventListeners() {
 }
 
 function setupSpeechRecognition() {
+    console.log('Setting up speech recognition...');
+    
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         recognition = new SpeechRecognition();
@@ -114,20 +125,32 @@ function setupSpeechRecognition() {
         recognition.onend = function() {
             stopListening();
         };
+        
+        console.log('Speech recognition initialized');
     } else {
-        document.getElementById('voice-btn').style.display = 'none';
+        const voiceBtn = document.getElementById('voice-btn');
+        if (voiceBtn) {
+            voiceBtn.style.display = 'none';
+        }
+        console.log('Speech recognition not supported');
     }
 }
 
 function handleRouteSubmission(e) {
     e.preventDefault();
     
+    console.log('Route form submitted');
+    
     const startId = document.getElementById('start-location').value;
     const endId = document.getElementById('end-location').value;
     const errorDiv = document.getElementById('error-message');
     
+    console.log('Start:', startId, 'End:', endId);
+    
     // Clear previous errors
-    errorDiv.style.display = 'none';
+    if (errorDiv) {
+        errorDiv.style.display = 'none';
+    }
     
     // Validation
     if (!startId || !endId) {
@@ -146,6 +169,7 @@ function handleRouteSubmission(e) {
     // Simulate loading delay for better UX
     setTimeout(() => {
         const result = findRoute(startId, endId);
+        console.log('Route result:', result);
         displayRouteResult(result);
         setLoadingState(false);
     }, 800);
