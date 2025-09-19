@@ -1,5 +1,5 @@
-// Campus Data
-const locations = [
+// Campus Data - Embedded directly in script
+const CAMPUS_LOCATIONS = [
     { id: 'gate1', name: 'Main Gate 1', coordinates: [13.2201951, 77.7541421] },
     { id: 'gate2', name: 'Main Gate 2', coordinates: [13.2213743, 77.7551241] },
     { id: 'flagpost', name: 'Flag Post', coordinates: [13.2216727, 77.7549353] },
@@ -12,8 +12,13 @@ const locations = [
     { id: 'sports_area', name: 'Sports Area', coordinates: [13.228393, 77.757574] }
 ];
 
-// Ensure locations are available globally
-window.campusLocations = locations;
+// Make locations available globally
+window.campusLocations = CAMPUS_LOCATIONS;
+const locations = CAMPUS_LOCATIONS;
+
+console.log('=== CAMPUS LOCATIONS LOADED ===');
+console.log('Total locations:', locations.length);
+console.log('Locations:', locations.map(l => l.name));
 
 const pathConnections = [
     { from: 'gate1', to: 'gate2', distance: 180 },
@@ -43,6 +48,9 @@ const allConnections = [
     }))
 ];
 
+console.log('=== PATH CONNECTIONS LOADED ===');
+console.log('Total connections:', allConnections.length);
+
 // Global variables
 let currentRoute = null;
 let map = null;
@@ -51,114 +59,34 @@ let markersLayer = null;
 let recognition = null;
 let isListening = false;
 
-// Initialize the application with multiple fallback strategies
-function initializeAppSafely() {
-    console.log('=== Campus Navigation App Initialization ===');
-    console.log('Document ready state:', document.readyState);
-    console.log('Locations available:', locations ? locations.length : 'undefined');
-    console.log('Path connections:', pathConnections ? pathConnections.length : 'undefined');
+// Immediate initialization attempt
+console.log('=== IMMEDIATE INITIALIZATION CHECK ===');
+console.log('Document ready state:', document.readyState);
+
+// Force populate dropdowns function
+function forcePopulateDropdowns() {
+    console.log('=== FORCE POPULATE DROPDOWNS ===');
     
-    // Check if DOM elements exist
     const startSelect = document.getElementById('start-location');
     const endSelect = document.getElementById('end-location');
     
-    console.log('Start select element found:', !!startSelect);
-    console.log('End select element found:', !!endSelect);
-    
-    if (startSelect && endSelect) {
-        initializeApp();
-    } else {
-        console.error('Required DOM elements not found, retrying in 500ms...');
-        setTimeout(initializeAppSafely, 500);
-    }
-}
-
-// Multiple initialization strategies
-function setupInitialization() {
-    console.log('Setting up initialization strategies...');
-    
-    // Strategy 1: DOMContentLoaded
-    if (document.readyState === 'loading') {
-        console.log('DOM still loading, waiting for DOMContentLoaded...');
-        document.addEventListener('DOMContentLoaded', initializeAppSafely);
-    } else {
-        console.log('DOM already loaded, initializing immediately...');
-        initializeAppSafely();
-    }
-    
-    // Strategy 2: Window load event (fallback)
-    window.addEventListener('load', function() {
-        console.log('Window load event fired, checking initialization...');
-        const startSelect = document.getElementById('start-location');
-        if (startSelect && startSelect.children.length <= 1) {
-            console.log('Fallback initialization triggered from window load');
-            initializeAppSafely();
-        }
-    });
-    
-    // Strategy 3: Emergency fallback after 3 seconds
-    setTimeout(function() {
-        console.log('Emergency fallback check after 3 seconds...');
-        const startSelect = document.getElementById('start-location');
-        const endSelect = document.getElementById('end-location');
-        
-        if (startSelect && endSelect && startSelect.children.length <= 1) {
-            console.log('Emergency initialization triggered');
-            initializeAppSafely();
-        } else if (!startSelect || !endSelect) {
-            console.error('CRITICAL: DOM elements still not found after 3 seconds');
-            console.error('Start select:', !!startSelect);
-            console.error('End select:', !!endSelect);
-        } else {
-            console.log('App appears to be properly initialized');
-        }
-    }, 3000);
-}
-
-// Start initialization
-setupInitialization();
-
-function initializeApp() {
-    populateLocationSelectors();
-    setupEventListeners();
-    setupSpeechRecognition();
-    console.log('App initialized successfully');
-}
-
-function populateLocationSelectors() {
-    console.log('=== Populating Location Selectors ===');
-    
-    const startSelect = document.getElementById('start-location');
-    const endSelect = document.getElementById('end-location');
+    console.log('Start select found:', !!startSelect);
+    console.log('End select found:', !!endSelect);
     
     if (!startSelect || !endSelect) {
-        console.error('Location selectors not found in DOM');
-        console.error('Start select:', !!startSelect);
-        console.error('End select:', !!endSelect);
-        return;
+        console.error('CRITICAL: Select elements not found!');
+        return false;
     }
     
-    console.log('Found both select elements, proceeding with population...');
-    
-    // Clear existing options except the first one
+    // Clear and repopulate
     startSelect.innerHTML = '<option value="">Select start location</option>';
     endSelect.innerHTML = '<option value="">Select end location</option>';
     
-    if (!locations || locations.length === 0) {
-        console.error('No locations data available');
-        console.error('Locations variable:', locations);
-        return;
-    }
+    console.log('Cleared existing options');
+    console.log('Available locations:', CAMPUS_LOCATIONS.length);
     
-    console.log('Processing', locations.length, 'locations...');
-    
-    locations.forEach(location => {
-        if (!location || !location.id || !location.name) {
-            console.warn('Invalid location data:', location);
-            return;
-        }
-        
-        console.log('Adding location:', location.name);
+    CAMPUS_LOCATIONS.forEach((location, index) => {
+        console.log(`Adding location ${index + 1}:`, location.name);
         
         const option1 = document.createElement('option');
         option1.value = location.id;
@@ -171,70 +99,133 @@ function populateLocationSelectors() {
         endSelect.appendChild(option2);
     });
     
-    console.log('Location selectors populated with', locations.length, 'locations');
-    console.log('Start select options:', startSelect.children.length);
-    console.log('End select options:', endSelect.children.length);
+    console.log('Start select options count:', startSelect.options.length);
+    console.log('End select options count:', endSelect.options.length);
     
-    // Make selectors visible if they were hidden
+    // Force visibility
     startSelect.style.display = 'block';
-    endSelect.style.display = 'block';
+    startSelect.style.visibility = 'visible';
+    startSelect.style.opacity = '1';
     
-    console.log('=== Location Selector Population Complete ===');
+    endSelect.style.display = 'block';
+    endSelect.style.visibility = 'visible';
+    endSelect.style.opacity = '1';
+    
+    console.log('Dropdowns populated successfully!');
+    return true;
 }
 
+// Multiple initialization strategies
+function initializeApp() {
+    console.log('=== APP INITIALIZATION START ===');
+    
+    // Try to populate dropdowns immediately
+    const populated = forcePopulateDropdowns();
+    
+    if (populated) {
+        setupEventListeners();
+        setupSpeechRecognition();
+        console.log('=== APP INITIALIZATION COMPLETE ===');
+    } else {
+        console.error('Failed to populate dropdowns');
+    }
+}
+
+// Strategy 1: DOMContentLoaded
+if (document.readyState === 'loading') {
+    console.log('DOM loading - waiting for DOMContentLoaded');
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOMContentLoaded fired');
+        setTimeout(initializeApp, 100);
+    });
+} else {
+    console.log('DOM already loaded - initializing immediately');
+    setTimeout(initializeApp, 100);
+}
+
+// Strategy 2: Window load
+window.addEventListener('load', function() {
+    console.log('Window load event fired');
+    const startSelect = document.getElementById('start-location');
+    if (startSelect && startSelect.options.length <= 1) {
+        console.log('Fallback initialization from window load');
+        setTimeout(initializeApp, 100);
+    }
+});
+
+// Strategy 3: Emergency fallback
+setTimeout(function() {
+    console.log('=== EMERGENCY FALLBACK CHECK ===');
+    const startSelect = document.getElementById('start-location');
+    const endSelect = document.getElementById('end-location');
+    
+    if (startSelect && endSelect) {
+        if (startSelect.options.length <= 1) {
+            console.log('EMERGENCY: Dropdowns empty, forcing population');
+            forcePopulateDropdowns();
+            setupEventListeners();
+            setupSpeechRecognition();
+        } else {
+            console.log('Dropdowns already populated, no emergency action needed');
+        }
+    } else {
+        console.error('CRITICAL: Select elements still not found after 2 seconds');
+    }
+}, 2000);
+
 function setupEventListeners() {
-    console.log('Setting up event listeners...');
+    console.log('=== SETTING UP EVENT LISTENERS ===');
     
     // Route form submission
     const routeForm = document.getElementById('route-form');
     if (routeForm) {
         routeForm.addEventListener('submit', handleRouteSubmission);
-        console.log('Route form listener added');
+        console.log('✓ Route form listener added');
     } else {
-        console.error('Route form not found');
+        console.error('✗ Route form not found');
     }
     
     // Chat form submission
     const chatForm = document.getElementById('chat-form');
     if (chatForm) {
         chatForm.addEventListener('submit', handleChatSubmission);
-        console.log('Chat form listener added');
+        console.log('✓ Chat form listener added');
     } else {
-        console.error('Chat form not found');
+        console.error('✗ Chat form not found');
     }
     
     // Voice button
     const voiceBtn = document.getElementById('voice-btn');
     if (voiceBtn) {
         voiceBtn.addEventListener('click', toggleVoiceRecognition);
-        console.log('Voice button listener added');
+        console.log('✓ Voice button listener added');
     } else {
-        console.error('Voice button not found');
+        console.error('✗ Voice button not found');
     }
     
     // Show map button
     const showMapBtn = document.getElementById('show-map-btn');
     if (showMapBtn) {
         showMapBtn.addEventListener('click', showMap);
-        console.log('Show map button listener added');
+        console.log('✓ Show map button listener added');
     } else {
-        console.error('Show map button not found');
+        console.error('✗ Show map button not found');
     }
     
     // Back button
     const backBtn = document.getElementById('back-btn');
     if (backBtn) {
         backBtn.addEventListener('click', hideMap);
-        console.log('Back button listener added');
+        console.log('✓ Back button listener added');
     } else {
-        console.error('Back button not found');
+        console.error('✗ Back button not found');
     }
     
-    console.log('Event listeners setup complete');
+    console.log('=== EVENT LISTENERS SETUP COMPLETE ===');
 }
 
 function setupSpeechRecognition() {
-    console.log('Setting up speech recognition...');
+    console.log('=== SETTING UP SPEECH RECOGNITION ===');
     
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -245,7 +236,10 @@ function setupSpeechRecognition() {
 
         recognition.onresult = function(event) {
             const transcript = event.results[0][0].transcript;
-            document.getElementById('chat-input').value = transcript;
+            const chatInput = document.getElementById('chat-input');
+            if (chatInput) {
+                chatInput.value = transcript;
+            }
             stopListening();
         };
 
@@ -257,26 +251,35 @@ function setupSpeechRecognition() {
             stopListening();
         };
         
-        console.log('Speech recognition initialized');
+        console.log('✓ Speech recognition initialized');
     } else {
         const voiceBtn = document.getElementById('voice-btn');
         if (voiceBtn) {
             voiceBtn.style.display = 'none';
         }
-        console.log('Speech recognition not supported');
+        console.log('✗ Speech recognition not supported');
     }
 }
 
 function handleRouteSubmission(e) {
     e.preventDefault();
     
-    console.log('Route form submitted');
+    console.log('=== ROUTE FORM SUBMITTED ===');
     
-    const startId = document.getElementById('start-location').value;
-    const endId = document.getElementById('end-location').value;
+    const startSelect = document.getElementById('start-location');
+    const endSelect = document.getElementById('end-location');
     const errorDiv = document.getElementById('error-message');
     
-    console.log('Start:', startId, 'End:', endId);
+    if (!startSelect || !endSelect) {
+        console.error('Select elements not found during submission');
+        return;
+    }
+    
+    const startId = startSelect.value;
+    const endId = endSelect.value;
+    
+    console.log('Start location:', startId);
+    console.log('End location:', endId);
     
     // Clear previous errors
     if (errorDiv) {
@@ -297,16 +300,10 @@ function handleRouteSubmission(e) {
     // Show loading state
     setLoadingState(true);
     
-    // Simulate loading delay for better UX
+    // Find route with delay for better UX
     setTimeout(() => {
         const result = findRoute(startId, endId);
-        console.log('Route result:', result);
-        if (result.success) {
-            console.log('Route found with', result.route.length, 'steps');
-            console.log('Total distance:', result.totalDistance, 'meters');
-        } else {
-            console.log('No route found');
-        }
+        console.log('Route calculation result:', result);
         displayRouteResult(result);
         setLoadingState(false);
     }, 800);
@@ -316,8 +313,9 @@ function handleChatSubmission(e) {
     e.preventDefault();
     
     const input = document.getElementById('chat-input');
-    const message = input.value.trim();
+    if (!input) return;
     
+    const message = input.value.trim();
     if (!message) return;
     
     // Add user message to chat
@@ -329,9 +327,11 @@ function handleChatSubmission(e) {
 }
 
 function processChatMessage(message) {
-    console.log('Processing chat message:', message);
+    console.log('=== PROCESSING CHAT MESSAGE ===');
+    console.log('Message:', message);
+    
     const { start, end } = parseNavigationRequest(message);
-    console.log('Parsed locations - Start:', start, 'End:', end);
+    console.log('Parsed locations - Start:', start?.name, 'End:', end?.name);
     
     if (start && end) {
         if (start.id === end.id) {
@@ -344,8 +344,10 @@ function processChatMessage(message) {
         setTimeout(() => {
             const result = findRoute(start.id, end.id);
             console.log('Chat route result:', result);
+            
             if (result.success) {
                 displayRouteResult(result);
+                
                 // Auto-populate the form
                 const startSelect = document.getElementById('start-location');
                 const endSelect = document.getElementById('end-location');
@@ -359,7 +361,7 @@ function processChatMessage(message) {
         }, 500);
     } else {
         // Try to identify mentioned locations
-        const mentionedLocations = locations.filter(loc => 
+        const mentionedLocations = CAMPUS_LOCATIONS.filter(loc => 
             message.toLowerCase().includes(loc.name.toLowerCase())
         );
         
@@ -374,8 +376,6 @@ function processChatMessage(message) {
 }
 
 function parseNavigationRequest(text) {
-    const normalizedText = text.toLowerCase();
-    
     const patterns = [
         /(?:take me |go |navigate |route )?from (.+?) to (.+?)(?:\.|$)/i,
         /(?:take me |go |navigate |route )?(.+?) to (.+?)(?:\.|$)/i,
@@ -402,7 +402,7 @@ function findLocationByName(text) {
     const normalizedText = text.toLowerCase().trim();
     
     // Direct matches
-    const directMatch = locations.find(loc => 
+    const directMatch = CAMPUS_LOCATIONS.find(loc => 
         loc.name.toLowerCase() === normalizedText ||
         loc.name.toLowerCase().includes(normalizedText) ||
         normalizedText.includes(loc.name.toLowerCase())
@@ -435,7 +435,7 @@ function findLocationByName(text) {
 
     for (const [variation, locationId] of Object.entries(variations)) {
         if (normalizedText.includes(variation)) {
-            return locations.find(loc => loc.id === locationId) || null;
+            return CAMPUS_LOCATIONS.find(loc => loc.id === locationId) || null;
         }
     }
 
@@ -454,9 +454,16 @@ function startListening() {
     if (recognition && !isListening) {
         isListening = true;
         recognition.start();
-        document.getElementById('voice-btn').classList.add('listening');
-        document.getElementById('voice-btn').textContent = '🔴';
-        document.getElementById('listening-indicator').style.display = 'flex';
+        const voiceBtn = document.getElementById('voice-btn');
+        const indicator = document.getElementById('listening-indicator');
+        
+        if (voiceBtn) {
+            voiceBtn.classList.add('listening');
+            voiceBtn.textContent = '🔴';
+        }
+        if (indicator) {
+            indicator.style.display = 'flex';
+        }
     }
 }
 
@@ -464,14 +471,23 @@ function stopListening() {
     if (recognition && isListening) {
         isListening = false;
         recognition.stop();
-        document.getElementById('voice-btn').classList.remove('listening');
-        document.getElementById('voice-btn').textContent = '🎤';
-        document.getElementById('listening-indicator').style.display = 'none';
+        const voiceBtn = document.getElementById('voice-btn');
+        const indicator = document.getElementById('listening-indicator');
+        
+        if (voiceBtn) {
+            voiceBtn.classList.remove('listening');
+            voiceBtn.textContent = '🎤';
+        }
+        if (indicator) {
+            indicator.style.display = 'none';
+        }
     }
 }
 
 function addChatMessage(text, isUser) {
     const messagesContainer = document.getElementById('chat-messages');
+    if (!messagesContainer) return;
+    
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
     messageDiv.textContent = text;
@@ -481,8 +497,10 @@ function addChatMessage(text, isUser) {
 
 function showError(message) {
     const errorDiv = document.getElementById('error-message');
-    errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
+    if (errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
 }
 
 function setLoadingState(loading) {
@@ -490,20 +508,28 @@ function setLoadingState(loading) {
     const btnText = document.getElementById('btn-text');
     const spinner = document.getElementById('loading-spinner');
     
-    if (loading) {
-        btn.disabled = true;
-        btnText.textContent = 'Finding Route...';
-        spinner.style.display = 'block';
-    } else {
-        btn.disabled = false;
-        btnText.textContent = 'Find Route';
-        spinner.style.display = 'none';
+    if (btn && btnText && spinner) {
+        if (loading) {
+            btn.disabled = true;
+            btnText.textContent = 'Finding Route...';
+            spinner.style.display = 'block';
+        } else {
+            btn.disabled = false;
+            btnText.textContent = 'Find Route';
+            spinner.style.display = 'none';
+        }
     }
 }
 
 function displayRouteResult(result) {
+    console.log('=== DISPLAYING ROUTE RESULT ===');
+    console.log('Result:', result);
+    
     const resultDiv = document.getElementById('route-result');
-    console.log('Displaying route result:', result);
+    if (!resultDiv) {
+        console.error('Route result div not found');
+        return;
+    }
     
     if (result.success) {
         currentRoute = result;
@@ -518,27 +544,32 @@ function displayRouteResult(result) {
         if (estimatedTimeEl) {
             estimatedTimeEl.textContent = `${result.estimatedTime} minutes`;
         }
-        
         if (routePathEl) {
             const routePath = result.route.map(step => step.location.name).join(' → ');
             routePathEl.textContent = routePath;
         }
         
         resultDiv.style.display = 'block';
-        console.log('Route result displayed successfully');
+        console.log('✓ Route result displayed successfully');
     } else {
         resultDiv.style.display = 'none';
         showError('No route found between selected locations');
-        console.log('Route result hidden due to failure');
+        console.log('✗ Route result hidden due to failure');
     }
 }
 
 function showMap() {
-    console.log('Show map clicked, currentRoute:', currentRoute);
-    if (!currentRoute) return;
+    console.log('=== SHOWING MAP ===');
+    if (!currentRoute) {
+        console.error('No current route to display');
+        return;
+    }
     
-    document.getElementById('main-interface').style.display = 'none';
-    document.getElementById('map-interface').style.display = 'block';
+    const mainInterface = document.getElementById('main-interface');
+    const mapInterface = document.getElementById('map-interface');
+    
+    if (mainInterface) mainInterface.style.display = 'none';
+    if (mapInterface) mapInterface.style.display = 'block';
     
     setTimeout(() => {
         initializeMap();
@@ -546,16 +577,25 @@ function showMap() {
 }
 
 function hideMap() {
-    document.getElementById('map-interface').style.display = 'none';
-    document.getElementById('main-interface').style.display = 'block';
+    const mapInterface = document.getElementById('map-interface');
+    const mainInterface = document.getElementById('main-interface');
+    
+    if (mapInterface) mapInterface.style.display = 'none';
+    if (mainInterface) mainInterface.style.display = 'block';
 }
 
 function initializeMap() {
-    console.log('Initializing map with route:', currentRoute);
-    if (!currentRoute) return;
+    console.log('=== INITIALIZING MAP ===');
+    if (!currentRoute) {
+        console.error('No current route for map');
+        return;
+    }
     
     const mapContainer = document.getElementById('map');
-    console.log('Map container found:', !!mapContainer);
+    if (!mapContainer) {
+        console.error('Map container not found');
+        return;
+    }
     
     // Clear existing map
     if (map) {
@@ -565,85 +605,85 @@ function initializeMap() {
     // Create new map
     const startCoords = currentRoute.route[0].location.coordinates;
     console.log('Setting map view to:', startCoords);
-    map = L.map(mapContainer).setView(startCoords, 16);
     
-    // Add tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-    console.log('Tile layer added');
-    
-    // Add route polyline
-    const routeCoordinates = currentRoute.route.map(step => step.location.coordinates);
-    console.log('Route coordinates:', routeCoordinates);
-    routeLayer = L.polyline(routeCoordinates, {
-        color: '#3B82F6',
-        weight: 4,
-        opacity: 0.8,
-        dashArray: '10, 5'
-    }).addTo(map);
-    console.log('Route polyline added');
-    
-    // Add markers
-    markersLayer = L.layerGroup().addTo(map);
-    console.log('Adding', currentRoute.route.length, 'markers');
-    
-    currentRoute.route.forEach((step, index) => {
-        const isStart = index === 0;
-        const isEnd = index === currentRoute.route.length - 1;
+    try {
+        map = L.map(mapContainer).setView(startCoords, 16);
         
-        let iconUrl;
-        if (isStart) {
-            iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png';
-        } else if (isEnd) {
-            iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png';
-        } else {
-            iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png';
-        }
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
         
-        const icon = L.icon({
-            iconUrl: iconUrl,
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-            iconSize: isStart || isEnd ? [25, 41] : [20, 33],
-            iconAnchor: isStart || isEnd ? [12, 41] : [10, 33],
-            popupAnchor: [1, isStart || isEnd ? -34 : -28],
-            shadowSize: [41, 41]
+        // Add route polyline
+        const routeCoordinates = currentRoute.route.map(step => step.location.coordinates);
+        routeLayer = L.polyline(routeCoordinates, {
+            color: '#3B82F6',
+            weight: 4,
+            opacity: 0.8,
+            dashArray: '10, 5'
+        }).addTo(map);
+        
+        // Add markers
+        markersLayer = L.layerGroup().addTo(map);
+        
+        currentRoute.route.forEach((step, index) => {
+            const isStart = index === 0;
+            const isEnd = index === currentRoute.route.length - 1;
+            
+            let iconUrl;
+            if (isStart) {
+                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png';
+            } else if (isEnd) {
+                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png';
+            } else {
+                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png';
+            }
+            
+            const icon = L.icon({
+                iconUrl: iconUrl,
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+                iconSize: isStart || isEnd ? [25, 41] : [20, 33],
+                iconAnchor: isStart || isEnd ? [12, 41] : [10, 33],
+                popupAnchor: [1, isStart || isEnd ? -34 : -28],
+                shadowSize: [41, 41]
+            });
+            
+            const marker = L.marker(step.location.coordinates, { icon }).addTo(markersLayer);
+            
+            let popupContent = `<div style="text-align: center;">
+                <h3 style="margin: 0 0 5px 0; font-weight: 600;">${step.location.name}</h3>`;
+            
+            if (isStart) {
+                popupContent += '<p style="margin: 0; color: #10b981; font-weight: 500; font-size: 0.875rem;">Start</p>';
+            } else if (isEnd) {
+                popupContent += '<p style="margin: 0; color: #ef4444; font-weight: 500; font-size: 0.875rem;">End</p>';
+            } else {
+                popupContent += '<p style="margin: 0; color: #3b82f6; font-weight: 500; font-size: 0.875rem;">Waypoint</p>';
+            }
+            
+            if (step.distanceFromPrevious) {
+                popupContent += `<p style="margin: 5px 0 0 0; color: #64748b; font-size: 0.75rem;">${step.distanceFromPrevious}m from previous</p>`;
+            }
+            
+            popupContent += '</div>';
+            marker.bindPopup(popupContent);
         });
         
-        const marker = L.marker(step.location.coordinates, { icon }).addTo(markersLayer);
-        
-        let popupContent = `<div style="text-align: center;">
-            <h3 style="margin: 0 0 5px 0; font-weight: 600;">${step.location.name}</h3>`;
-        
-        if (isStart) {
-            popupContent += '<p style="margin: 0; color: #10b981; font-weight: 500; font-size: 0.875rem;">Start</p>';
-        } else if (isEnd) {
-            popupContent += '<p style="margin: 0; color: #ef4444; font-weight: 500; font-size: 0.875rem;">End</p>';
-        } else {
-            popupContent += '<p style="margin: 0; color: #3b82f6; font-weight: 500; font-size: 0.875rem;">Waypoint</p>';
+        // Fit map to route bounds
+        if (routeLayer) {
+            map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
         }
         
-        if (step.distanceFromPrevious) {
-            popupContent += `<p style="margin: 5px 0 0 0; color: #64748b; font-size: 0.75rem;">${step.distanceFromPrevious}m from previous</p>`;
-        }
+        // Update route info panel
+        updateMapRouteInfo();
+        console.log('✓ Map initialization complete');
         
-        popupContent += '</div>';
-        marker.bindPopup(popupContent);
-    });
-    
-    // Fit map to route bounds
-    if (routeLayer) {
-        map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
-        console.log('Map bounds fitted to route');
+    } catch (error) {
+        console.error('Map initialization error:', error);
     }
-    
-    // Update route info panel
-    updateMapRouteInfo();
-    console.log('Map initialization complete');
 }
 
 function updateMapRouteInfo() {
-    console.log('Updating map route info');
     if (!currentRoute) return;
     
     const mapTotalDistanceEl = document.getElementById('map-total-distance');
@@ -687,13 +727,12 @@ function updateMapRouteInfo() {
             stepsContainer.appendChild(stepDiv);
         });
     }
-    console.log('Map route info updated');
 }
 
 // Pathfinding Algorithm (Dijkstra's)
 function findRoute(startId, endId) {
-    console.log('Finding route from', startId, 'to', endId);
-    console.log('Available connections:', allConnections.length);
+    console.log('=== FINDING ROUTE ===');
+    console.log('From:', startId, 'To:', endId);
     
     if (startId === endId) {
         return {
@@ -708,7 +747,7 @@ function findRoute(startId, endId) {
     const unvisited = new Set();
     
     // Initialize all nodes
-    locations.forEach(location => {
+    CAMPUS_LOCATIONS.forEach(location => {
         nodes.set(location.id, {
             location,
             distance: location.id === startId ? 0 : Infinity,
@@ -716,8 +755,6 @@ function findRoute(startId, endId) {
         });
         unvisited.add(location.id);
     });
-    
-    console.log('Initialized', nodes.size, 'nodes');
 
     while (unvisited.size > 0) {
         // Find unvisited node with minimum distance
@@ -742,7 +779,6 @@ function findRoute(startId, endId) {
 
         // Update distances to neighbors
         const connections = allConnections.filter(conn => conn.from === currentId);
-        console.log('Found', connections.length, 'connections from', currentId);
         
         for (const connection of connections) {
             const neighborNode = nodes.get(connection.to);
@@ -761,7 +797,7 @@ function findRoute(startId, endId) {
     let currentNode = nodes.get(endId);
     
     if (!currentNode || currentNode.distance === Infinity) {
-        console.log('No route found - destination unreachable');
+        console.log('✗ No route found - destination unreachable');
         return {
             route: [],
             totalDistance: 0,
@@ -776,8 +812,6 @@ function findRoute(startId, endId) {
         pathNodes.unshift(currentNode);
         currentNode = currentNode.previous;
     }
-    
-    console.log('Route path has', pathNodes.length, 'nodes');
 
     // Convert to route steps
     let totalDistance = 0;
@@ -801,7 +835,7 @@ function findRoute(startId, endId) {
     // Estimate walking time (assuming 5 km/h walking speed)
     const estimatedTime = Math.ceil((totalDistance / 1000) * 12); // minutes
     
-    console.log('Route found:', {
+    console.log('✓ Route found:', {
         steps: route.length,
         totalDistance,
         estimatedTime
